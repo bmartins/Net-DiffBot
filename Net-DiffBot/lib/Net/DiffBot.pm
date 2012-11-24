@@ -10,7 +10,7 @@ use URI::Escape qw(uri_escape);
 
 =head1 NAME
 
-Net::DiffBot - The great new Net::DiffBot!
+Net::DiffBot - Interface to the diffbot.com API
 
 =head1 VERSION
 
@@ -23,23 +23,25 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+This module is just an interface for diffbot.com API
 
 Perhaps a little code snippet.
 
     use Net::DiffBot;
 
-    my $foo = Net::DiffBot->new();
+    my $d = Net::DiffBot->new('token' => 'diffbottoken');
+	my $page_date = $d->get_data_by_url($url)
     ...
 
-=head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 new
+
+Constructor method, you need to pass the diffbot token 
+	
+    my $d = Net::DiffBot->new('token' => 'diffbottoken');
 
 =cut
 
@@ -55,6 +57,17 @@ sub new {
 
   return $self
 }
+
+=head2 get_date_by_url
+
+Fetch diffbot data based on the url , along with the url you can set other options
+
+	my $d->get_data_by_url($url, 'tags' => 1, summary => 1)
+
+	Valid flags are: callback, html, dontStripAds, tags, comments, summary
+	You can see the use of theses flaga at diffbot.com
+
+=cut
 
 sub get_data_by_url {
     my ($self, $url, %args) = @_;
@@ -107,16 +120,6 @@ sub build_request {
     }
 
 
-}
-
-sub function1 {
-}
-
-=head2 function2
-
-=cut
-
-sub function2 {
 }
 
 =head1 AUTHOR
