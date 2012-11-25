@@ -6,7 +6,9 @@ use warnings;
 use LWP::UserAgent;
 use JSON::XS;
 use URI::Escape qw(uri_escape);
+use HTTP::Request;
 
+my $endpoint_url = 'http://www.diffbot.com/api/article';
 
 =head1 NAME
 
@@ -69,12 +71,63 @@ Fetch diffbot data based on the url , along with the url you can set other optio
 
 =cut
 
-sub get_data_by_url {
-    my ($self, $url, %args) = @_;
-    my $endpoint_url = 'http://www.diffbot.com/api/article';
-    die "No url provided" if (!$url);
+=head2 get_date_by_post
 
-    my @possible_args = qw(callback html dontStripAds tags comments summary);
+Fetch diffbot data based on sent content , you also need to send the url and the content type of the content you send ('text/plain', 'text/html'). You can also set other options as with get_data_by_url.
+
+	my $d->get_data_by_postl($url, $content, $content_type, 'tags' => 1, summary => 1)
+
+	Valid flags are: callback, html, dontStripAds, tags, comments, summary
+	You can see the use of theses flaga at diffbot.com
+
+=cut
+
+
+sub get_data_by_post {
+	my ($self, $url, $content, $content_type, %args) = @_;
+	if (($content_type ne 'text/plain') and ($content_type ne 'text/html') ) {
+		warn "Invalid content type, possible values are 'text/plain' or 'text/html'";
+		return undef;
+	}
+	if (!$url) {
+		warn "No url provided";
+		return undef;
+	}
+
+	my $request_args = $self->get_request_args($url, %args);
+    my $request_url = $self->build_request_url(%{$request_args});
+    print $request_url ."\n";
+    my $ua = LWP::UserAgent->new();
+
+	my $content_length = length($content);
+	my $headers = HTTP::Headers->new();
+	$headers->header('Content-type' => $content_type);
+	$headers->header('Content-length' => $content_length);
+	my $http_request = HTTP::Request->new('POST', $request_url, $headers, $content);
+	my $response = $ua->request($http_request);
+    if (!$response->is_success) {
+        warn "ERROR with request " . $request_url . " HTTP response" . $response->status_line;
+        return undef;
+    } else {
+        my $data;
+        eval {
+            $data = decode_json($response->content);
+        };
+        if ($@) {
+            warn "ERROR decoding JSON response";
+            return undef;
+        }
+        return $data;
+    }
+
+
+
+
+}
+
+sub get_request_args {
+	my ($self, $url, %args) = @_;
+	my @possible_args = qw(callback html dontStripAds tags comments summary);
 
     my %request_args = (
         'url' => $url,
@@ -84,7 +137,21 @@ sub get_data_by_url {
             $request_args{$arg} = 'true';
         }
     }
-    my $request_url = $self->build_request($endpoint_url, %request_args);
+
+	return \%request_args;
+	
+
+}
+sub get_data_by_url {
+    my ($self, $url, %args) = @_;
+	if (!$url) {
+		warn "No url provided";
+		return undef;
+	}
+
+
+	my $request_args = $self->get_request_args($url, %args);
+    my $request_url = $self->build_request_url(%{$request_args});
     print $request_url ."\n";
     my $ua = LWP::UserAgent->new();
 
@@ -103,20 +170,19 @@ sub get_data_by_url {
         }
         return $data;
     }
-
 }
 
 
-sub build_request {
-    my ($self, $url, %args) = @_;
+sub build_request_url {
+    my ($self, %args) = @_;
     $args{'token'} = $self->{'token'};
 
     my @keys = sort( grep { defined $args{$_} } keys(%args) );
 
     if (%args) {
-        return  "$url?" . join( '&', map { uri_escape($_,$self->{'uri_unsafe'}) . '=' . uri_escape( $args{$_} ) } @keys );
+        return  "$endpoint_url?" . join( '&', map { uri_escape($_,$self->{'uri_unsafe'}) . '=' . uri_escape( $args{$_} ) } @keys );
     } else {
-        return $url;
+        return $endpoint_url;
     }
 
 
