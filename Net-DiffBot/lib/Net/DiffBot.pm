@@ -62,10 +62,12 @@ sub new {
 
 Fetch diffbot data based on the url , along with the url you can set other options
 
-	my $d->get_data_from_url($url, 'tags' => 1, summary => 1)
+	my $page_date = $d->get_data_from_url($url, 'tags' => 1, summary => 1)
 
 	Valid flags are: callback, html, dontStripAds, tags, comments, summary
-	You can see the use of theses flaga at diffbot.com
+	You can see the use of theses flags at www.diffbot.com
+
+	Returns the page data as an hashref.
 
 =cut
 
@@ -73,10 +75,12 @@ Fetch diffbot data based on the url , along with the url you can set other optio
 
 Fetch diffbot data based on sent content , you also need to send the url and the content type  ('text/plain', 'text/html'). You can also set other options as with get_data_from_url.
 
-	my $d->get_data_from_content($url, $content, $content_type, 'tags' => 1, summary => 1)
+	my $page_data = my $d->get_data_from_content($url, $content, $content_type, 'tags' => 1, summary => 1)
 
 	Valid flags are: callback, html, dontStripAds, tags, comments, summary
-	You can see the use of theses flaga at diffbot.com
+	You can see the use of theses flags at www.diffbot.com
+
+	Returns the page data as an hashref.
 
 =cut
 
